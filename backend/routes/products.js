@@ -12,4 +12,15 @@ router.get('/', async (req, res) => {
   }
 });
 
+router.get('/search', async (req, res) => {
+  const nameQuery = req.query.name || '';
+  try {
+    const regex = new RegExp(nameQuery, 'i'); // case-insensitive match
+    const products = await Product.find({ name: { $regex: regex } });
+    res.json(products);
+  } catch (err) {
+    res.status(500).json({ error: 'Search failed' });
+  }
+});
+
 module.exports = router;
