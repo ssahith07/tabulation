@@ -5,9 +5,11 @@ import {
   Paper, TablePagination, Typography, Container, TextField, Box,
   Button, Checkbox
 } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 
 const ProductTable = () => {
-  const baseURL = process.env.REACT_APP_API_BASE_URL || 'http://192.168.29.163:5000';
+  const baseURL = 'http://192.168.29.163:5000' || 'http://localhost:5000';
+  const navigate = useNavigate();
 
   const [products, setProducts] = useState([]);
   const [search, setSearch] = useState('');
@@ -15,22 +17,41 @@ const ProductTable = () => {
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [editRowId, setEditRowId] = useState(null);
   const [editValues, setEditValues] = useState({});
+  const token = JSON.parse(localStorage.getItem('auth'))?.token;
+
+  const isAuthenticated = !!token;
+
+  const authConfig = {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const endpoint = search.trim()
-          ? `/api/products/search?name=${search}`
-          : '/api/products';
-        const res = await axios.get(`${baseURL}${endpoint}`);
-        setProducts(res.data);
-        setPage(0);
-      } catch (err) {
-        console.error('API error:', err);
-      }
-    };
-    fetchData();
-  }, [search]);
+  const fetchData = async () => {
+    try {
+      const token = JSON.parse(localStorage.getItem('auth'))?.token;
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      };
+
+      const endpoint = search.trim()
+        ? `/api/products/search?name=${search}`
+        : '/api/products';
+
+      const res = await axios.get(`${baseURL}${endpoint}`, config); // ✅ token added
+      setProducts(res.data);
+      setPage(0);
+    } catch (err) {
+      console.error('API error:', err);
+    }
+  };
+
+  fetchData();
+}, [search]);
+
 
   const enterEditMode = (product) => {
     setEditRowId(product._id);
@@ -57,7 +78,7 @@ const ProductTable = () => {
         ...editValues,
         price: parseFloat(editValues.price)
       };
-      const res = await axios.put(`${baseURL}/api/products/${id}`, updatedData);
+      const res = await axios.put(`${baseURL}/api/products/${id}`, updatedData, authConfig);
       const updatedProducts = products.map((p) =>
         p._id === id ? res.data : p
       );
@@ -65,15 +86,23 @@ const ProductTable = () => {
       setEditRowId(null);
     } catch (err) {
       console.error('Update failed:', err);
+      if (err.response?.status === 401) {
+        localStorage.removeItem('auth');
+        navigate('/');
+      }
     }
   };
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`${baseURL}/api/products/${id}`);
+      await axios.delete(`${baseURL}/api/products/${id}`, authConfig);
       setProducts(products.filter((p) => p._id !== id));
     } catch (err) {
       console.error('Delete failed:', err);
+      if (err.response?.status === 401) {
+        localStorage.removeItem('auth');
+        navigate('/');
+      }
     }
   };
 
@@ -155,6 +184,7 @@ const ProductTable = () => {
                             variant="outlined"
                             size="small"
                             sx={{ mr: 1 }}
+                            disabled={!isAuthenticated}
                           >
                             Edit
                           </Button>
@@ -163,6 +193,7 @@ const ProductTable = () => {
                             variant="outlined"
                             color="error"
                             size="small"
+                            disabled={!isAuthenticated}
                           >
                             Delete
                           </Button>
@@ -196,73 +227,3 @@ export default ProductTable;
 
 
 
-
-// import React, { useEffect, useState } from 'react';
-// import axios from 'axios';
-// import {
-//   Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper,
-//   TablePagination, Typography, Container, Box
-// } from '@mui/material';
-
-// const ProductTable = () => {
-//   const [products, setProducts] = useState([]);
-//   const [page, setPage] = useState(0);
-//   const [rowsPerPage, setRowsPerPage] = useState(10);
-
-//   useEffect(() => {
-//     axios.get(`${process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000'}/api/products`)
-//       .then(res => setProducts(res.data))
-//       .catch(err => console.error('API error:', err));
-//   }, []);
-
-//   return (
-//     <Container maxWidth="md" sx={{ mt: 4 }}>
-//       {/* Top-left aligned heading */}
-//       <Box sx={{ mb: 2 }}>
-//         <Typography variant="h5" fontWeight="bold">
-//           Product List
-//         </Typography>
-//       </Box>
-
-//       <Paper elevation={3}>
-//         <TableContainer>
-//           <Table>
-//             <TableHead>
-//               <TableRow>
-//                 <TableCell><strong>Name</strong></TableCell>
-//                 <TableCell><strong>Price</strong></TableCell>
-//                 <TableCell><strong>Category</strong></TableCell>
-//                 <TableCell><strong>In Stock</strong></TableCell>
-//               </TableRow>
-//             </TableHead>
-//             <TableBody>
-//               {products
-//                 .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-//                 .map((product, i) => (
-//                   <TableRow key={i}>
-//                     <TableCell>{product.name}</TableCell>
-//                     <TableCell>${product.price}</TableCell>
-//                     <TableCell>{product.category}</TableCell>
-//                     <TableCell>{product.inStock ? 'Yes' : 'No'}</TableCell>
-//                   </TableRow>
-//               ))}
-//             </TableBody>
-//           </Table>
-//         </TableContainer>
-//         <TablePagination
-//           component="div"
-//           count={products.length}
-//           page={page}
-//           onPageChange={(e, newPage) => setPage(newPage)}
-//           rowsPerPage={rowsPerPage}
-//           onRowsPerPageChange={e => {
-//             setRowsPerPage(parseInt(e.target.value, 10));
-//             setPage(0);
-//           }}
-//         />
-//       </Paper>
-//     </Container>
-//   );
-// };
-
-// export default ProductTable;
