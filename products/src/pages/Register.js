@@ -1,20 +1,33 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { TextField, Button, Box, Typography, Container } from '@mui/material';
+import {
+  TextField,
+  Button,
+  Box,
+  Typography,
+  Container,
+  MenuItem,
+  Select,
+  InputLabel,
+  FormControl
+} from '@mui/material';
 
 const Register = () => {
-  const [form, setForm] = useState({ username: '', password: '' });
+  const [form, setForm] = useState({ username: '', password: '', role: 'consumer' });
   const [message, setMessage] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post(`${process.env.REACT_APP_API_BASE_URL || 'http://192.168.29.163:5000'}/api/auth/register`, form);
+      await axios.post(
+        `${process.env.REACT_APP_API_BASE_URL || 'http://192.168.29.163:5000'}/api/auth/register`,
+        form
+      );
       setMessage('Registration successful.');
       setIsSuccess(true);
-      setForm({ username: '', password: '' });
-    } catch {
+      setForm({ username: '', password: '', role: 'consumer' });
+    } catch (err) {
       setMessage('Registration failed.');
       setIsSuccess(false);
     }
@@ -30,7 +43,6 @@ const Register = () => {
           value={form.username}
           onChange={e => setForm({ ...form, username: e.target.value })}
           margin="normal"
-          required
         />
         <TextField
           fullWidth
@@ -39,8 +51,20 @@ const Register = () => {
           value={form.password}
           onChange={e => setForm({ ...form, password: e.target.value })}
           margin="normal"
-          required
         />
+        <FormControl fullWidth margin="normal">
+        <InputLabel id="role-label">Role</InputLabel>
+        <Select
+          labelId="role-label"
+          id="role-select"
+          value={form.role}
+          label="Role"
+          onChange={(e) => setForm({ ...form, role: e.target.value })}
+        >
+          <MenuItem value="admin">Admin</MenuItem>
+          <MenuItem value="consumer">Consumer</MenuItem>
+        </Select>
+        </FormControl>
         <Button type="submit" variant="outlined" fullWidth sx={{ mt: 2 }}>
           Register
         </Button>

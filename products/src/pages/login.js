@@ -8,8 +8,9 @@ const Login = ({ onLogin }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post(`${process.env.REACT_APP_API_BASE_URL || 'http://192.168.29.163:5000'}/api/auth/login`, form);
-      localStorage.setItem('auth', JSON.stringify({ token: res.data.token }));
+      // const res = await axios.post(`${'http://localhost:5000' || 'http://192.168.29.163:5000'}/api/auth/login`, form);
+      const res = await axios.post(`${'http://192.168.29.163:5000' || 'http://localhost:5000'}/api/auth/login`, form);
+      localStorage.setItem('auth', JSON.stringify({ token: res.data.token, role: res.data.role }));
       onLogin();
     } catch {
       alert('Invalid credentials');

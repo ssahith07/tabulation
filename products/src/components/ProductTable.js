@@ -8,6 +8,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 
 const ProductTable = () => {
+  // const baseURL = 'http://localhost:5000' || 'http://192.168.29.163:5000';
   const baseURL = 'http://192.168.29.163:5000' || 'http://localhost:5000';
   const navigate = useNavigate();
 
@@ -26,6 +27,9 @@ const ProductTable = () => {
       Authorization: `Bearer ${token}`
     }
   };
+  const auth = JSON.parse(localStorage.getItem('auth'));
+  const isAdmin = auth?.role === 'admin';
+
 
   useEffect(() => {
   const fetchData = async () => {
@@ -131,7 +135,9 @@ const ProductTable = () => {
                 <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>Price</TableCell>
                 <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>Category</TableCell>
                 <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>In Stock</TableCell>
-                <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>Actions</TableCell>
+                {isAdmin && (
+                  <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>Actions</TableCell>
+                )}
               </TableRow>
             </TableHead>
             <TableBody>
@@ -178,26 +184,12 @@ const ProductTable = () => {
                         <TableCell>${product.price.toFixed(2)}</TableCell>
                         <TableCell>{product.category}</TableCell>
                         <TableCell>{product.inStock ? 'Yes' : 'No'}</TableCell>
-                        <TableCell>
-                          <Button
-                            onClick={() => enterEditMode(product)}
-                            variant="outlined"
-                            size="small"
-                            sx={{ mr: 1 }}
-                            disabled={!isAuthenticated}
-                          >
-                            Edit
-                          </Button>
-                          <Button
-                            onClick={() => handleDelete(product._id)}
-                            variant="outlined"
-                            color="error"
-                            size="small"
-                            disabled={!isAuthenticated}
-                          >
-                            Delete
-                          </Button>
-                        </TableCell>
+                        {isAdmin && (
+                          <TableCell>
+                            <Button onClick={() => enterEditMode(product)} variant="outlined" size="small" sx={{ mr: 1 }}>Edit</Button>
+                            <Button onClick={() => handleDelete(product._id)} variant="outlined" color="error" size="small">Delete</Button>
+                          </TableCell>
+                        )}
                       </>
                     )}
                   </TableRow>
